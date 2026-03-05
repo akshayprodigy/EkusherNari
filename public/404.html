@@ -1,0 +1,39 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Redirecting…</title>
+  </head>
+  <body>
+    <script>
+      // GitHub Pages SPA redirect.
+      // Keeps the repository name in the path so project pages work.
+      // Based on the "spa-github-pages" pattern.
+      (function () {
+        var l = window.location;
+        var pathSegmentsToKeep = 1; // /<repo>/
+
+        var newUrl =
+          l.protocol +
+          '//' +
+          l.hostname +
+          (l.port ? ':' + l.port : '') +
+          l.pathname
+            .split('/')
+            .slice(0, 1 + pathSegmentsToKeep)
+            .join('/') +
+          '/?/' +
+          l.pathname
+            .split('/')
+            .slice(1 + pathSegmentsToKeep)
+            .join('/')
+            .replace(/&/g, '~and~') +
+          (l.search ? '&' + l.search.slice(1).replace(/&/g, '~and~') : '') +
+          l.hash;
+
+        l.replace(newUrl);
+      })();
+    </script>
+  </body>
+</html>

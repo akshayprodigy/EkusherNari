@@ -7,7 +7,7 @@ import { Footer } from './components/Footer';
 
 export default function App() {
   return (
-    <BrowserRouter>
+    <BrowserRouter basename={import.meta.env.BASE_URL}>
       <div className="min-h-screen flex flex-col bg-amber-50">
         <Navigation />
         <main className="flex-grow">
