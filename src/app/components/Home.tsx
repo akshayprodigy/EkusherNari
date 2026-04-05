@@ -1,67 +1,134 @@
 import { Link } from 'react-router';
-import { ArrowRight, Heart, Users, Award, Sparkles } from 'lucide-react';
+import { ArrowRight, ArrowLeft, Heart, Users, Award, Sparkles } from 'lucide-react';
 import { ImageWithFallback } from './figma/ImageWithFallback';
 import logo from '../../assets/3088c26f39780943c73062cfd3ac8ae7a1f65b7c.png';
+import { useState, useEffect } from 'react';
+
+const heroSlides = [
+  {
+    id: 1,
+    image: 'https://images.unsplash.com/photo-1526461591544-198d2190f270?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3Nzg4Nzd8MHwxfHNlYXJjaHwxfHxiZW5nYWxpJTIwaGFuZGljcmFmdCUyMHBvdHRlcnl8ZW58MXx8fHwxNzcyNzE3Nzc0fDA&ixlib=rb-4.1.0&q=80&w=1600',
+    label: 'Traditional Pottery',
+  },
+  {
+    id: 2,
+    image: 'https://images.unsplash.com/photo-1762764214015-d5c22646465b?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3Nzg4Nzd8MHwxfHNlYXJjaHwxfHxoYW5kd292ZW4lMjB0ZXh0aWxlJTIwaW5kaWF8ZW58MXx8fHwxNzcyNzE3Nzc1fDA&ixlib=rb-4.1.0&q=80&w=1600',
+    label: 'Handwoven Textiles',
+  },
+  {
+    id: 3,
+    image: 'https://images.unsplash.com/photo-1762342345465-d021b8491309?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3Nzg4Nzd8MHwxfHNlYXJjaHwxfHxpbmRpYW4lMjBhcnRpc2FuJTIwamV3ZWxyeXxlbnwxfHx8fDE3NzI3MTc3NzV8MA&ixlib=rb-4.1.0&q=80&w=1600',
+    label: 'Artisan Jewelry',
+  },
+  {
+    id: 4,
+    image: 'https://images.unsplash.com/photo-1767330855351-480010c6c194?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3Nzg4Nzd8MHwxfHNlYXJjaHwxfHxiZW5nYWxpJTIwYXJ0JTIwY3VsdHVyZXxlbnwxfHx8fDE3NzI3MTc3NzZ8MA&ixlib=rb-4.1.0&q=80&w=1600',
+    label: 'Bengali Art',
+  },
+];
 
 export function Home() {
+  const [activeSlide, setActiveSlide] = useState(0);
+
+  useEffect(() => {
+    const timer = setInterval(() => {
+      setActiveSlide((prev) => (prev + 1) % heroSlides.length);
+    }, 4000);
+    return () => clearInterval(timer);
+  }, []);
+
   return (
     <div className="w-full">
-      {/* Hero Section with Alpana Pattern */}
-      <section className="relative bg-gradient-to-br from-orange-600 via-red-600 to-pink-600 text-white py-32 overflow-hidden">
-        {/* Alpana Pattern Background */}
-        <div className="absolute inset-0 opacity-10">
+      {/* Hero Section — Horizontal Image Carousel */}
+      <section className="relative text-white overflow-hidden" style={{ height: '100vh', minHeight: '600px' }}>
+        {/* Slides */}
+        {heroSlides.map((slide, idx) => (
+          <div
+            key={slide.id}
+            className="absolute inset-0 transition-opacity duration-1000"
+            style={{ opacity: idx === activeSlide ? 1 : 0 }}
+          >
+            <ImageWithFallback
+              src={slide.image}
+              alt={slide.label}
+              className="w-full h-full object-cover"
+            />
+            <div className="absolute inset-0 bg-gradient-to-br from-orange-900/70 via-red-800/60 to-pink-900/50"></div>
+          </div>
+        ))}
+
+        {/* Alpana Pattern Overlay */}
+        <div className="absolute inset-0 opacity-10 pointer-events-none z-10">
           <svg className="w-full h-full" viewBox="0 0 1200 800">
-            {/* Traditional Bengali Alpana Patterns */}
             <circle cx="200" cy="150" r="80" fill="none" stroke="white" strokeWidth="2" />
             <circle cx="200" cy="150" r="60" fill="none" stroke="white" strokeWidth="2" />
             <circle cx="200" cy="150" r="40" fill="none" stroke="white" strokeWidth="2" />
-            <path d="M 200 150 L 220 170 L 200 190 L 180 170 Z" fill="white" />
-            
             <circle cx="1000" cy="600" r="100" fill="none" stroke="white" strokeWidth="2" />
-            <circle cx="1000" cy="600" r="80" fill="none" stroke="white" strokeWidth="2" />
-            <circle cx="1000" cy="600" r="60" fill="none" stroke="white" strokeWidth="2" />
-            
-            {/* Lotus petals motif */}
-            <g transform="translate(600, 400)">
-              <ellipse cx="0" cy="-50" rx="20" ry="50" fill="white" opacity="0.3" />
-              <ellipse cx="35" cy="-35" rx="20" ry="50" fill="white" opacity="0.3" transform="rotate(45 35 -35)" />
-              <ellipse cx="50" cy="0" rx="20" ry="50" fill="white" opacity="0.3" transform="rotate(90 50 0)" />
-              <ellipse cx="35" cy="35" rx="20" ry="50" fill="white" opacity="0.3" transform="rotate(135 35 35)" />
-              <ellipse cx="0" cy="50" rx="20" ry="50" fill="white" opacity="0.3" transform="rotate(180 0 50)" />
-              <ellipse cx="-35" cy="35" rx="20" ry="50" fill="white" opacity="0.3" transform="rotate(225 -35 35)" />
-              <ellipse cx="-50" cy="0" rx="20" ry="50" fill="white" opacity="0.3" transform="rotate(270 -50 0)" />
-              <ellipse cx="-35" cy="-35" rx="20" ry="50" fill="white" opacity="0.3" transform="rotate(315 -35 -35)" />
-            </g>
+            <circle cx="1000" cy="600" r="70" fill="none" stroke="white" strokeWidth="2" />
           </svg>
         </div>
-        
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
-          <div className="text-center">
-            <div className="mb-8 flex justify-center">
-              <img src={logo} alt="Ekusher Naree" className="w-44 h-44 object-contain drop-shadow-2xl" />
+
+        {/* Content */}
+        <div className="absolute inset-0 flex items-center justify-center z-20">
+          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 w-full">
+            <div className="text-center">
+              <div className="mb-8 flex justify-center">
+                <img src={logo} alt="Ekusher Naree" className="w-44 h-44 object-contain drop-shadow-2xl" />
+              </div>
+              <h1 className="text-6xl md:text-7xl font-bold mb-6 drop-shadow-lg">একুশের নারী</h1>
+              <p className="text-2xl md:text-3xl mb-4 font-semibold text-yellow-100">We Are Together</p>
+              <p className="text-xl md:text-2xl mb-10 max-w-4xl mx-auto text-orange-50 leading-relaxed">
+                Celebrating the timeless beauty of handcrafted artisan products that tell stories of tradition, culture, and the skilled craftsmanship of Bengali women artisans
+              </p>
+              <Link
+                to="/gallery"
+                className="inline-flex items-center space-x-3 bg-white text-orange-600 px-10 py-5 rounded-full text-lg font-bold hover:bg-yellow-50 transition-all shadow-2xl hover:scale-105 border-4 border-yellow-300"
+              >
+                <Sparkles size={24} />
+                <span>Explore Our Collection</span>
+                <ArrowRight size={24} />
+              </Link>
             </div>
-            <h1 className="text-6xl md:text-7xl font-bold mb-6 drop-shadow-lg">
-              একুশের নারী
-            </h1>
-            <p className="text-2xl md:text-3xl mb-4 font-semibold text-yellow-100">
-              We Are Together
-            </p>
-            <p className="text-xl md:text-2xl mb-10 max-w-4xl mx-auto text-orange-50 leading-relaxed">
-              Celebrating the timeless beauty of handcrafted artisan products that tell stories of tradition, culture, and the skilled craftsmanship of Bengali women artisans
-            </p>
-            <Link
-              to="/gallery"
-              className="inline-flex items-center space-x-3 bg-white text-orange-600 px-10 py-5 rounded-full text-lg font-bold hover:bg-yellow-50 transition-all shadow-2xl hover:shadow-3xl hover:scale-105 border-4 border-yellow-300"
-            >
-              <Sparkles size={24} />
-              <span>Explore Our Collection</span>
-              <ArrowRight size={24} />
-            </Link>
           </div>
         </div>
 
+        {/* Prev / Next Arrows */}
+        <button
+          onClick={() => setActiveSlide((prev) => (prev - 1 + heroSlides.length) % heroSlides.length)}
+          className="absolute left-4 top-1/2 -translate-y-1/2 z-30 w-12 h-12 bg-white/20 hover:bg-white/40 backdrop-blur-sm rounded-full flex items-center justify-center transition-all"
+          aria-label="Previous slide"
+        >
+          <ArrowLeft size={22} className="text-white" />
+        </button>
+        <button
+          onClick={() => setActiveSlide((prev) => (prev + 1) % heroSlides.length)}
+          className="absolute right-4 top-1/2 -translate-y-1/2 z-30 w-12 h-12 bg-white/20 hover:bg-white/40 backdrop-blur-sm rounded-full flex items-center justify-center transition-all"
+          aria-label="Next slide"
+        >
+          <ArrowRight size={22} className="text-white" />
+        </button>
+
+        {/* Dot indicators */}
+        <div className="absolute bottom-24 left-1/2 -translate-x-1/2 z-30 flex space-x-3">
+          {heroSlides.map((_, idx) => (
+            <button
+              key={idx}
+              onClick={() => setActiveSlide(idx)}
+              className={`rounded-full transition-all ${idx === activeSlide ? 'w-8 h-3 bg-white' : 'w-3 h-3 bg-white/50 hover:bg-white/80'}`}
+              aria-label={`Slide ${idx + 1}`}
+            />
+          ))}
+        </div>
+
+        {/* Slide label */}
+        <div className="absolute bottom-12 left-1/2 -translate-x-1/2 z-30">
+          <span className="text-white/70 text-sm font-medium tracking-widest uppercase">
+            {heroSlides[activeSlide].label}
+          </span>
+        </div>
+
         {/* Decorative bottom wave */}
-        <div className="absolute bottom-0 left-0 w-full">
+        <div className="absolute bottom-0 left-0 w-full z-20 pointer-events-none">
           <svg viewBox="0 0 1200 120" className="w-full h-16 fill-amber-50">
             <path d="M0,60 Q300,100 600,60 T1200,60 L1200,120 L0,120 Z" />
           </svg>
