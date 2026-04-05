@@ -9,6 +9,7 @@ export function Navigation() {
 
   const navLinks = [
     { path: '/', label: 'Home' },
+    { path: '/about', label: 'About Us' },
     { path: '/gallery', label: 'Gallery' },
     { path: '/contact', label: 'Contact Us' },
   ];
@@ -39,11 +40,11 @@ export function Navigation() {
           {/* Logo */}
           <Link to="/" className="flex items-center space-x-4 group">
             <div className="relative">
-              <img src={logo} alt="Ekusher Nari Logo" className="w-16 h-16 object-contain transition-transform group-hover:scale-105" />
+              <img src={logo} alt="Ekusher Naree Logo" className="w-20 h-20 object-contain transition-transform group-hover:scale-105" />
             </div>
             <div>
               <h1 className="text-2xl font-bold text-gray-800 group-hover:text-orange-600 transition-colors">একুশের নারী</h1>
-              <p className="text-sm text-orange-600 italic">Platform for Women</p>
+              <p className="text-sm text-orange-600 italic">We Are Together</p>
             </div>
           </Link>
 

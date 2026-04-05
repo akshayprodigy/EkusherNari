@@ -38,13 +38,13 @@ export function Home() {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
           <div className="text-center">
             <div className="mb-8 flex justify-center">
-              <img src={logo} alt="Ekusher Nari" className="w-32 h-32 object-contain drop-shadow-2xl" />
+              <img src={logo} alt="Ekusher Naree" className="w-44 h-44 object-contain drop-shadow-2xl" />
             </div>
             <h1 className="text-6xl md:text-7xl font-bold mb-6 drop-shadow-lg">
               একুশের নারী
             </h1>
             <p className="text-2xl md:text-3xl mb-4 font-semibold text-yellow-100">
-              Platform for Women
+              We Are Together
             </p>
             <p className="text-xl md:text-2xl mb-10 max-w-4xl mx-auto text-orange-50 leading-relaxed">
               Celebrating the timeless beauty of handcrafted artisan products that tell stories of tradition, culture, and the skilled craftsmanship of Bengali women artisans
@@ -109,7 +109,7 @@ export function Home() {
                 </div>
                 <h3 className="text-2xl font-bold mb-4 text-gray-800 text-center">Handcrafted with Love</h3>
                 <p className="text-gray-600 text-center leading-relaxed">
-                  Every piece is meticulously crafted by skilled women artisans, preserving centuries-old Bengali traditions and techniques
+                  Each piece is meticulously handcrafted by skilled artisans, preserving centuries-old culture, traditions, and craftsmanship
                 </p>
                 {/* Decorative dots */}
                 <div className="flex justify-center space-x-2 mt-6">
@@ -128,7 +128,7 @@ export function Home() {
                 </div>
                 <h3 className="text-2xl font-bold mb-4 text-gray-800 text-center">Supporting Artisans</h3>
                 <p className="text-gray-600 text-center leading-relaxed">
-                  We empower local women craftspeople by providing a platform to showcase their exceptional work and earn sustainable livelihoods
+                  We empower local artisans by giving them a platform to showcase their exceptional craftsmanship and build sustainable livelihoods
                 </p>
                 <div className="flex justify-center space-x-2 mt-6">
                   <div className="w-2 h-2 bg-red-400 rounded-full"></div>
@@ -146,7 +146,7 @@ export function Home() {
                 </div>
                 <h3 className="text-2xl font-bold mb-4 text-gray-800 text-center">Authentic Quality</h3>
                 <p className="text-gray-600 text-center leading-relaxed">
-                  Each product represents the highest standards of quality and authentic Bengali craftsmanship passed down through generations
+                  Each product reflects the highest standards of quality and the authentic craftsmanship passed down through generations
                 </p>
                 <div className="flex justify-center space-x-2 mt-6">
                   <div className="w-2 h-2 bg-yellow-400 rounded-full"></div>
@@ -191,7 +191,7 @@ export function Home() {
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-3 gap-10 mb-16">
-            <div className="group cursor-pointer relative">
+            <Link to="/gallery" className="group relative">
               <div className="absolute -inset-2 bg-gradient-to-r from-orange-400 to-red-500 rounded-2xl opacity-0 group-hover:opacity-100 blur transition-opacity"></div>
               <div className="relative bg-white rounded-2xl overflow-hidden shadow-xl hover:shadow-2xl transition-all border-4 border-orange-100">
                 <div className="relative overflow-hidden aspect-square">
@@ -216,9 +216,9 @@ export function Home() {
                   </div>
                 </div>
               </div>
-            </div>
+            </Link>
 
-            <div className="group cursor-pointer relative">
+            <Link to="/gallery" className="group relative">
               <div className="absolute -inset-2 bg-gradient-to-r from-red-400 to-pink-500 rounded-2xl opacity-0 group-hover:opacity-100 blur transition-opacity"></div>
               <div className="relative bg-white rounded-2xl overflow-hidden shadow-xl hover:shadow-2xl transition-all border-4 border-red-100">
                 <div className="relative overflow-hidden aspect-square">
@@ -243,9 +243,9 @@ export function Home() {
                   </div>
                 </div>
               </div>
-            </div>
+            </Link>
 
-            <div className="group cursor-pointer relative">
+            <Link to="/gallery" className="group relative">
               <div className="absolute -inset-2 bg-gradient-to-r from-yellow-400 to-orange-500 rounded-2xl opacity-0 group-hover:opacity-100 blur transition-opacity"></div>
               <div className="relative bg-white rounded-2xl overflow-hidden shadow-xl hover:shadow-2xl transition-all border-4 border-yellow-100">
                 <div className="relative overflow-hidden aspect-square">
@@ -270,7 +270,7 @@ export function Home() {
                   </div>
                 </div>
               </div>
-            </div>
+            </Link>
           </div>
 
           <div className="text-center">
@@ -279,7 +279,7 @@ export function Home() {
               className="inline-flex items-center space-x-3 bg-gradient-to-r from-orange-600 via-red-600 to-pink-600 text-white px-12 py-5 rounded-full text-lg font-bold hover:shadow-2xl transition-all hover:scale-105 border-4 border-orange-200"
             >
               <Sparkles size={24} />
-              <span>View Full Gallery</span>
+              <span>Browse Products</span>
               <ArrowRight size={24} />
             </Link>
           </div>

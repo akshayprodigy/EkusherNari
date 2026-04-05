@@ -303,24 +303,25 @@ export function Gallery() {
             <X className="text-white" size={32} />
           </button>
           
-          <div className="max-w-6xl w-full my-8" onClick={(e) => e.stopPropagation()}>
+          <div className="max-w-6xl w-full" onClick={(e) => e.stopPropagation()}>
             {!showEnquiryForm ? (
-              <>
-                <div className="relative rounded-2xl overflow-hidden shadow-2xl border-4 border-white/20 mb-8">
+              <div className="flex flex-col lg:flex-row gap-6 items-stretch">
+                {/* Image — proportionally constrained so full image is visible */}
+                <div className="lg:w-1/2 relative rounded-2xl overflow-hidden shadow-2xl border-4 border-white/20 flex-shrink-0">
                   <img
                     src={selectedImage.image}
                     alt={selectedImage.title}
-                    className="w-full h-auto"
+                    className="w-full h-full object-contain max-h-[75vh]"
+                    style={{ background: 'rgba(0,0,0,0.4)' }}
                   />
-                  
-                  {/* Decorative corners on modal image */}
-                  <div className="absolute top-0 left-0 w-24 h-24 border-t-4 border-l-4 border-white/50"></div>
-                  <div className="absolute top-0 right-0 w-24 h-24 border-t-4 border-r-4 border-white/50"></div>
-                  <div className="absolute bottom-0 left-0 w-24 h-24 border-b-4 border-l-4 border-white/50"></div>
-                  <div className="absolute bottom-0 right-0 w-24 h-24 border-b-4 border-r-4 border-white/50"></div>
+                  <div className="absolute top-0 left-0 w-16 h-16 border-t-4 border-l-4 border-white/50"></div>
+                  <div className="absolute top-0 right-0 w-16 h-16 border-t-4 border-r-4 border-white/50"></div>
+                  <div className="absolute bottom-0 left-0 w-16 h-16 border-b-4 border-l-4 border-white/50"></div>
+                  <div className="absolute bottom-0 right-0 w-16 h-16 border-b-4 border-r-4 border-white/50"></div>
                 </div>
-                
-                <div className="bg-white/10 backdrop-blur-md rounded-2xl p-8 border-2 border-white/20">
+
+                {/* Details panel */}
+                <div className="lg:w-1/2 bg-white/10 backdrop-blur-md rounded-2xl p-8 border-2 border-white/20 flex flex-col justify-center">
                   <div className="flex items-center justify-center space-x-3 mb-6">
                     <Sparkles className="text-yellow-400" size={24} />
                     <span className="px-6 py-2 bg-gradient-to-r from-orange-600 to-red-600 text-white rounded-full font-semibold shadow-lg">
@@ -328,18 +329,17 @@ export function Gallery() {
                     </span>
                     <Sparkles className="text-yellow-400" size={24} />
                   </div>
-                  
+
                   <h2 className="text-4xl font-bold text-white mb-4 drop-shadow-lg text-center">{selectedImage.title}</h2>
                   <p className="text-white/90 text-xl mb-3 leading-relaxed text-center">{selectedImage.description}</p>
                   <p className="text-yellow-300 text-lg italic font-medium text-center mb-4">{selectedImage.artisan}</p>
-                  
+
                   <div className="text-center mb-6">
                     <p className="text-2xl font-bold text-white bg-gradient-to-r from-orange-600 to-red-600 inline-block px-6 py-2 rounded-full">
                       {selectedImage.price}
                     </p>
                   </div>
-                  
-                  {/* Enquiry Button */}
+
                   <div className="text-center">
                     <button
                       onClick={() => setShowEnquiryForm(true)}
@@ -350,8 +350,7 @@ export function Gallery() {
                       <Sparkles size={24} />
                     </button>
                   </div>
-                  
-                  {/* Decorative dots */}
+
                   <div className="flex justify-center space-x-2 mt-8">
                     <div className="w-3 h-3 bg-orange-400 rounded-full"></div>
                     <div className="w-3 h-3 bg-red-400 rounded-full"></div>
@@ -359,7 +358,7 @@ export function Gallery() {
                     <div className="w-3 h-3 bg-yellow-400 rounded-full"></div>
                   </div>
                 </div>
-              </>
+              </div>
             ) : (
               <div className="bg-white/10 backdrop-blur-md rounded-2xl p-8 border-2 border-white/20">
                 <div className="flex items-center justify-center space-x-3 mb-8">
