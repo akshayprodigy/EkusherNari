@@ -3,6 +3,17 @@ import { ArrowRight, Heart, Users, Award, Sparkles } from 'lucide-react';
 import { ImageWithFallback } from './figma/ImageWithFallback';
 import logo from '../../assets/3088c26f39780943c73062cfd3ac8ae7a1f65b7c.png';
 
+const eventImages = [
+  { id: 1, src: 'https://images.unsplash.com/photo-1526461591544-198d2190f270?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3Nzg4Nzd8MHwxfHNlYXJjaHwxfHxiZW5nYWxpJTIwaGFuZGljcmFmdCUyMHBvdHRlcnl8ZW58MXx8fHwxNzcyNzE3Nzc0fDA&ixlib=rb-4.1.0&q=80&w=600', label: 'Traditional Pottery' },
+  { id: 2, src: 'https://images.unsplash.com/photo-1708706679975-6e54492f15bf?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3Nzg4Nzd8MHwxfHNlYXJjaHwxfHxpbmRpYW4lMjB0ZXJyYWNvdHRhJTIwY3JhZnRzfGVufDF8fHx8MTc3MjcxNzc3NHww&ixlib=rb-4.1.0&q=80&w=600', label: 'Terracotta Art' },
+  { id: 3, src: 'https://images.unsplash.com/photo-1762764214015-d5c22646465b?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3Nzg4Nzd8MHwxfHNlYXJjaHwxfHxoYW5kd292ZW4lMjB0ZXh0aWxlJTIwaW5kaWF8ZW58MXx8fHwxNzcyNzE3Nzc1fDA&ixlib=rb-4.1.0&q=80&w=600', label: 'Handwoven Textiles' },
+  { id: 4, src: 'https://images.unsplash.com/photo-1762342345465-d021b8491309?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3Nzg4Nzd8MHwxfHNlYXJjaHwxfHxpbmRpYW4lMjBhcnRpc2FuJTIwamV3ZWxyeXxlbnwxfHx8fDE3NzI3MTc3NzV8MA&ixlib=rb-4.1.0&q=80&w=600', label: 'Artisan Jewelry' },
+  { id: 5, src: 'https://images.unsplash.com/photo-1650726583448-dda0065f2f11?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3Nzg4Nzd8MHwxfHNlYXJjaHwxfHx0cmFkaXRpb25hbCUyMGluZGlhbiUyMGNyYWZ0c3xlbnwxfHx8fDE3NzI3MTc3NzV8MA&ixlib=rb-4.1.0&q=80&w=600', label: 'Traditional Crafts' },
+  { id: 6, src: 'https://images.unsplash.com/photo-1767330855351-480010c6c194?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3Nzg4Nzd8MHwxfHNlYXJjaHwxfHxiZW5nYWxpJTIwYXJ0JTIwY3VsdHVyZXxlbnwxfHx8fDE3NzI3MTc3NzZ8MA&ixlib=rb-4.1.0&q=80&w=600', label: 'Bengali Art' },
+  { id: 7, src: 'https://images.unsplash.com/photo-1678791673777-57274271e434?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3Nzg4Nzd8MHwxfHNlYXJjaHwxfHxoYW5kbWFkZSUyMGNsYXklMjBwb3R0ZXJ5fGVufDF8fHx8MTc3MjcxNzc3Nnww&ixlib=rb-4.1.0&q=80&w=600', label: 'Clay Pottery' },
+  { id: 8, src: 'https://images.unsplash.com/photo-1768902406144-a348c559c73c?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3Nzg4Nzd8MHwxfHNlYXJjaHwxfHxpbmRpYW4lMjBiYXNrZXQlMjB3ZWF2aW5nfGVufDF8fHx8MTc3MjcxNzc3Nnww&ixlib=rb-4.1.0&q=80&w=600', label: 'Basket Weaving' },
+];
+
 export function Home() {
   return (
     <div className="w-full">
@@ -65,6 +76,45 @@ export function Home() {
           <svg viewBox="0 0 1200 120" className="w-full h-16 fill-amber-50">
             <path d="M0,60 Q300,100 600,60 T1200,60 L1200,120 L0,120 Z" />
           </svg>
+        </div>
+      </section>
+
+      {/* Horizontal Scrollable Event Gallery Strip */}
+      <section className="bg-gray-900 py-10 overflow-hidden">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 mb-6">
+          <div className="flex items-center space-x-3">
+            <div className="w-1 h-8 bg-gradient-to-b from-orange-500 to-red-600 rounded-full"></div>
+            <h2 className="text-white text-2xl font-bold">Our Art &amp; Events</h2>
+            <div className="flex-1 h-px bg-white/10"></div>
+            <Link to="/gallery" className="text-orange-400 hover:text-orange-300 text-sm font-medium flex items-center space-x-1 transition-colors">
+              <span>View All</span>
+              <ArrowRight size={14} />
+            </Link>
+          </div>
+        </div>
+        <div
+          className="flex gap-4 overflow-x-auto px-4 sm:px-6 lg:px-8 pb-4 snap-x snap-mandatory"
+          style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}
+        >
+          {[...eventImages, ...eventImages].map((img, idx) => (
+            <Link
+              key={idx}
+              to="/gallery"
+              className="snap-start flex-shrink-0 relative rounded-2xl overflow-hidden group cursor-pointer"
+              style={{ width: '220px', height: '280px' }}
+            >
+              <ImageWithFallback
+                src={img.src}
+                alt={img.label}
+                className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500"
+              />
+              <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-transparent to-transparent"></div>
+              <div className="absolute bottom-0 left-0 right-0 p-4">
+                <p className="text-white text-sm font-semibold leading-tight">{img.label}</p>
+              </div>
+              <div className="absolute inset-0 border-2 border-transparent group-hover:border-orange-400 rounded-2xl transition-colors"></div>
+            </Link>
+          ))}
         </div>
       </section>
 
