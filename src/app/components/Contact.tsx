@@ -1,5 +1,7 @@
 import { Mail, Phone, MapPin, Send, Sparkles } from 'lucide-react';
 import { useState } from 'react';
+import { COUNTRY_CODES, DEFAULT_COUNTRY_CODE, phoneMaxLengthForCode, validatePhoneForCode } from '../lib/countryCodes';
+import { sendContactEmail } from '../lib/emailService';
 
 function WhatsAppIcon() {
   return (
@@ -9,35 +11,148 @@ function WhatsAppIcon() {
   );
 }
 
+type ContactErrors = {
+  name?: string;
+  email?: string;
+  phone?: string;
+  pincode?: string;
+  subject?: string;
+  message?: string;
+};
+
+const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/;
+const NAME_RE = /^[A-Za-z][A-Za-z\s.'-]{1,}$/;
+const PINCODE_RE = /^[1-9]\d{5}$/;
+
+function validateContact(data: {
+  name: string;
+  email: string;
+  countryCode: string;
+  phone: string;
+  pincode: string;
+  subject: string;
+  message: string;
+}): ContactErrors {
+  const errors: ContactErrors = {};
+  const name = data.name.trim();
+  if (!name) errors.name = 'Please enter your full name';
+  else if (name.length < 2) errors.name = 'Name must be at least 2 characters';
+  else if (!NAME_RE.test(name)) errors.name = 'Name can only contain letters, spaces, . \' -';
+
+  const email = data.email.trim();
+  if (!email) errors.email = 'Please enter your email address';
+  else if (!EMAIL_RE.test(email)) errors.email = 'Please enter a valid email address';
+
+  const phone = data.phone.replace(/\D/g, '');
+  if (phone) {
+    const phoneError = validatePhoneForCode(data.countryCode, phone);
+    if (phoneError) errors.phone = phoneError;
+  }
+
+  const pincode = data.pincode.trim();
+  if (pincode && !PINCODE_RE.test(pincode)) {
+    errors.pincode = 'PIN code must be 6 digits and cannot start with 0';
+  }
+
+  const subject = data.subject.trim();
+  if (!subject) errors.subject = 'Please enter a subject';
+  else if (subject.length < 3) errors.subject = 'Subject must be at least 3 characters';
+
+  const message = data.message.trim();
+  if (!message) errors.message = 'Please enter a message';
+  else if (message.length < 10) errors.message = 'Message must be at least 10 characters';
+
+  return errors;
+}
+
+const initialFormData = {
+  name: '',
+  email: '',
+  countryCode: DEFAULT_COUNTRY_CODE,
+  phone: '',
+  whatsappOptIn: false,
+  pincode: '',
+  subject: '',
+  message: '',
+};
+
 export function Contact() {
-  const [formData, setFormData] = useState({
-    name: '',
-    email: '',
-    phone: '',
-    whatsappOptIn: false,
-    pincode: '',
-    subject: '',
-    message: '',
-  });
+  const [formData, setFormData] = useState(initialFormData);
 
   const [submitted, setSubmitted] = useState(false);
+  const [errors, setErrors] = useState<ContactErrors>({});
+  const [submitError, setSubmitError] = useState<string | null>(null);
+  const [submitting, setSubmitting] = useState(false);
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    setSubmitted(true);
-    setTimeout(() => {
-      setSubmitted(false);
-      setFormData({ name: '', email: '', phone: '', whatsappOptIn: false, pincode: '', subject: '', message: '' });
-    }, 3000);
+    const validationErrors = validateContact(formData);
+    if (Object.keys(validationErrors).length > 0) {
+      setErrors(validationErrors);
+      return;
+    }
+    setErrors({});
+    setSubmitError(null);
+    setSubmitting(true);
+    try {
+      await sendContactEmail(formData);
+      setSubmitted(true);
+      setTimeout(() => {
+        setSubmitted(false);
+        setFormData(initialFormData);
+      }, 3000);
+    } catch (err) {
+      setSubmitError(
+        err instanceof Error
+          ? err.message
+          : 'Something went wrong while sending your message. Please try again.',
+      );
+    } finally {
+      setSubmitting(false);
+    }
   };
 
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
+  const handleChange = (
+    e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>,
+  ) => {
     const target = e.target as HTMLInputElement;
-    setFormData({
-      ...formData,
-      [target.name]: target.type === 'checkbox' ? target.checked : target.value,
-    });
+    const { name } = target;
+    let value: string | boolean = target.type === 'checkbox' ? target.checked : target.value;
+    if (name === 'phone' && typeof value === 'string') {
+      value = value.replace(/\D/g, '');
+    }
+    setFormData((prev) => ({ ...prev, [name]: value }));
+    if (errors[name as keyof ContactErrors]) {
+      setErrors((prev) => {
+        const next = { ...prev };
+        delete next[name as keyof ContactErrors];
+        return next;
+      });
+    }
+    if (name === 'countryCode' && errors.phone) {
+      setErrors((prev) => {
+        const next = { ...prev };
+        delete next.phone;
+        return next;
+      });
+    }
   };
+
+  const handleBlur = (e: React.FocusEvent<HTMLInputElement | HTMLTextAreaElement>) => {
+    const { name } = e.target;
+    const validationErrors = validateContact(formData);
+    setErrors((prev) => ({
+      ...prev,
+      [name]: validationErrors[name as keyof ContactErrors],
+    }));
+  };
+
+  const fieldClass = (field: keyof ContactErrors) =>
+    `w-full px-5 py-4 border-3 rounded-xl focus:ring-4 outline-none transition-all text-lg bg-gradient-to-br from-white to-orange-50 ${
+      errors[field]
+        ? 'border-red-500 focus:ring-red-200 focus:border-red-500'
+        : 'border-orange-300 focus:ring-orange-200 focus:border-orange-500'
+    }`;
 
   return (
     <div className="min-h-screen py-20 bg-gradient-to-br from-amber-50 via-orange-50 to-red-50 relative overflow-hidden">
@@ -178,15 +293,33 @@ export function Contact() {
               </div>
             </div>
 
-            {/* Map Placeholder */}
+            {/* Visit Us — Google Maps embed */}
             <div className="mt-8 relative">
               <div className="absolute -inset-1 bg-gradient-to-r from-orange-400 to-red-400 rounded-3xl opacity-50 blur"></div>
-              <div className="relative bg-gradient-to-br from-orange-100 to-red-100 rounded-3xl overflow-hidden shadow-xl h-72 border-4 border-orange-200">
-                <div className="w-full h-full flex flex-col items-center justify-center text-gray-600">
-                  <MapPin size={64} className="text-orange-600 mb-4" />
-                  <p className="text-xl font-semibold text-orange-700">Visit Us</p>
-                  <p className="text-gray-600">36, B.T. Road, Kolkata – 700058</p>
+              <div className="relative bg-white rounded-3xl overflow-hidden shadow-xl border-4 border-orange-200">
+                <div className="flex items-center space-x-3 px-6 py-4 bg-gradient-to-r from-orange-100 to-red-100">
+                  <MapPin className="text-orange-600" size={28} />
+                  <div>
+                    <p className="text-xl font-bold text-orange-700 leading-tight">Visit Us</p>
+                    <p className="text-sm text-gray-700">36, B.T. Road, Kolkata – 700058</p>
+                  </div>
                 </div>
+                <iframe
+                  title="Ekusher Naree location — 36 BT Road, Kolkata 700058"
+                  src="https://www.google.com/maps?q=36%20B.T.%20Road%2C%20Kolkata%20700058&output=embed"
+                  className="w-full h-72 border-0"
+                  loading="lazy"
+                  referrerPolicy="no-referrer-when-downgrade"
+                  allowFullScreen
+                />
+                <a
+                  href="https://www.google.com/maps/search/?api=1&query=36%20B.T.%20Road%2C%20Kolkata%20700058"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="block text-center py-3 text-sm font-semibold text-orange-700 hover:text-orange-900 bg-orange-50 border-t-2 border-orange-200"
+                >
+                  Open in Google Maps ↗
+                </a>
               </div>
             </div>
           </div>
@@ -210,7 +343,7 @@ export function Contact() {
                   </div>
                 )}
 
-                <form onSubmit={handleSubmit} className="space-y-6">
+                <form onSubmit={handleSubmit} noValidate className="space-y-6">
                   <div>
                     <label htmlFor="name" className="block text-sm font-bold text-gray-700 mb-2">
                       Full Name *
@@ -222,9 +355,17 @@ export function Contact() {
                       required
                       value={formData.name}
                       onChange={handleChange}
-                      className="w-full px-5 py-4 border-3 border-orange-300 rounded-xl focus:ring-4 focus:ring-orange-200 focus:border-orange-500 outline-none transition-all text-lg bg-gradient-to-br from-white to-orange-50"
+                      onBlur={handleBlur}
+                      aria-invalid={!!errors.name}
+                      aria-describedby={errors.name ? 'name-error' : undefined}
+                      className={fieldClass('name')}
                       placeholder="Your name"
                     />
+                    {errors.name && (
+                      <p id="name-error" className="mt-2 text-sm font-semibold text-red-600">
+                        {errors.name}
+                      </p>
+                    )}
                   </div>
 
                   <div>
@@ -238,24 +379,64 @@ export function Contact() {
                       required
                       value={formData.email}
                       onChange={handleChange}
-                      className="w-full px-5 py-4 border-3 border-orange-300 rounded-xl focus:ring-4 focus:ring-orange-200 focus:border-orange-500 outline-none transition-all text-lg bg-gradient-to-br from-white to-orange-50"
+                      onBlur={handleBlur}
+                      aria-invalid={!!errors.email}
+                      aria-describedby={errors.email ? 'email-error' : undefined}
+                      className={fieldClass('email')}
                       placeholder="your.email@example.com"
                     />
+                    {errors.email && (
+                      <p id="email-error" className="mt-2 text-sm font-semibold text-red-600">
+                        {errors.email}
+                      </p>
+                    )}
                   </div>
 
                   <div>
                     <label htmlFor="phone" className="block text-sm font-bold text-gray-700 mb-2">
                       Phone Number
                     </label>
-                    <input
-                      type="tel"
-                      id="phone"
-                      name="phone"
-                      value={formData.phone}
-                      onChange={handleChange}
-                      className="w-full px-5 py-4 border-3 border-orange-300 rounded-xl focus:ring-4 focus:ring-orange-200 focus:border-orange-500 outline-none transition-all text-lg bg-gradient-to-br from-white to-orange-50"
-                      placeholder="+91 89101 43371"
-                    />
+                    <div
+                      className={`flex items-stretch rounded-xl border-3 bg-gradient-to-br from-white to-orange-50 overflow-hidden transition-all focus-within:ring-4 ${
+                        errors.phone
+                          ? 'border-red-500 focus-within:ring-red-200 focus-within:border-red-500'
+                          : 'border-orange-300 focus-within:ring-orange-200 focus-within:border-orange-500'
+                      }`}
+                    >
+                      <select
+                        id="countryCode"
+                        name="countryCode"
+                        aria-label="Country code"
+                        value={formData.countryCode}
+                        onChange={handleChange}
+                        className="px-3 py-4 bg-transparent border-r-2 border-orange-200 outline-none text-lg text-gray-700 cursor-pointer"
+                      >
+                        {COUNTRY_CODES.map((c) => (
+                          <option key={c.iso} value={c.code}>
+                            {c.flag} {c.code}
+                          </option>
+                        ))}
+                      </select>
+                      <input
+                        type="tel"
+                        id="phone"
+                        name="phone"
+                        inputMode="numeric"
+                        maxLength={phoneMaxLengthForCode(formData.countryCode)}
+                        value={formData.phone}
+                        onChange={handleChange}
+                        onBlur={handleBlur}
+                        aria-invalid={!!errors.phone}
+                        aria-describedby={errors.phone ? 'phone-error' : undefined}
+                        className="flex-1 px-5 py-4 bg-transparent outline-none text-lg"
+                        placeholder="00000 00000"
+                      />
+                    </div>
+                    {errors.phone && (
+                      <p id="phone-error" className="mt-2 text-sm font-semibold text-red-600">
+                        {errors.phone}
+                      </p>
+                    )}
                   </div>
 
                   {/* WhatsApp opt-in checkbox */}
@@ -283,16 +464,24 @@ export function Contact() {
                       Postal PIN Code
                     </label>
                     <input
-                      type="number"
+                      type="text"
                       id="pincode"
                       name="pincode"
+                      inputMode="numeric"
+                      maxLength={6}
                       value={formData.pincode}
                       onChange={handleChange}
-                      min="100000"
-                      max="999999"
-                      className="w-full px-5 py-4 border-3 border-orange-300 rounded-xl focus:ring-4 focus:ring-orange-200 focus:border-orange-500 outline-none transition-all text-lg bg-gradient-to-br from-white to-orange-50"
+                      onBlur={handleBlur}
+                      aria-invalid={!!errors.pincode}
+                      aria-describedby={errors.pincode ? 'pincode-error' : undefined}
+                      className={fieldClass('pincode')}
                       placeholder="6-digit PIN code"
                     />
+                    {errors.pincode && (
+                      <p id="pincode-error" className="mt-2 text-sm font-semibold text-red-600">
+                        {errors.pincode}
+                      </p>
+                    )}
                   </div>
 
                   <div>
@@ -306,9 +495,17 @@ export function Contact() {
                       required
                       value={formData.subject}
                       onChange={handleChange}
-                      className="w-full px-5 py-4 border-3 border-orange-300 rounded-xl focus:ring-4 focus:ring-orange-200 focus:border-orange-500 outline-none transition-all text-lg bg-gradient-to-br from-white to-orange-50"
+                      onBlur={handleBlur}
+                      aria-invalid={!!errors.subject}
+                      aria-describedby={errors.subject ? 'subject-error' : undefined}
+                      className={fieldClass('subject')}
                       placeholder="How can we help you?"
                     />
+                    {errors.subject && (
+                      <p id="subject-error" className="mt-2 text-sm font-semibold text-red-600">
+                        {errors.subject}
+                      </p>
+                    )}
                   </div>
 
                   <div>
@@ -321,17 +518,36 @@ export function Contact() {
                       required
                       value={formData.message}
                       onChange={handleChange}
+                      onBlur={handleBlur}
+                      aria-invalid={!!errors.message}
+                      aria-describedby={errors.message ? 'message-error' : undefined}
                       rows={6}
-                      className="w-full px-5 py-4 border-3 border-orange-300 rounded-xl focus:ring-4 focus:ring-orange-200 focus:border-orange-500 outline-none transition-all resize-none text-lg bg-gradient-to-br from-white to-orange-50"
+                      className={`w-full px-5 py-4 border-3 rounded-xl focus:ring-4 outline-none transition-all resize-none text-lg bg-gradient-to-br from-white to-orange-50 ${
+                        errors.message
+                          ? 'border-red-500 focus:ring-red-200 focus:border-red-500'
+                          : 'border-orange-300 focus:ring-orange-200 focus:border-orange-500'
+                      }`}
                       placeholder="Tell us more about your inquiry..."
                     />
+                    {errors.message && (
+                      <p id="message-error" className="mt-2 text-sm font-semibold text-red-600">
+                        {errors.message}
+                      </p>
+                    )}
                   </div>
+
+                  {submitError && (
+                    <div className="p-4 bg-red-50 border-2 border-red-300 rounded-xl text-red-700 font-semibold">
+                      {submitError}
+                    </div>
+                  )}
 
                   <button
                     type="submit"
-                    className="w-full bg-gradient-to-r from-orange-600 via-red-600 to-pink-600 text-white py-5 rounded-xl text-lg font-bold hover:shadow-2xl transition-all shadow-lg flex items-center justify-center space-x-3 border-4 border-orange-200 hover:scale-105"
+                    disabled={submitting}
+                    className="w-full bg-gradient-to-r from-orange-600 via-red-600 to-pink-600 text-white py-5 rounded-xl text-lg font-bold hover:shadow-2xl transition-all shadow-lg flex items-center justify-center space-x-3 border-4 border-orange-200 hover:scale-105 disabled:opacity-70 disabled:cursor-not-allowed disabled:hover:scale-100"
                   >
-                    <span>Send Message</span>
+                    <span>{submitting ? 'Sending…' : 'Send Message'}</span>
                     <Send size={24} />
                   </button>
                 </form>

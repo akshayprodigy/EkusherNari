@@ -1,6 +1,8 @@
 import { useState } from 'react';
 import { X, Sparkles, Send, Mail, Phone, User, MessageCircle } from 'lucide-react';
 import { ImageWithFallback } from './figma/ImageWithFallback';
+import { COUNTRY_CODES, DEFAULT_COUNTRY_CODE, phoneMaxLengthForCode, validatePhoneForCode } from '../lib/countryCodes';
+import { sendEnquiryEmail } from '../lib/emailService';
 
 const galleryItems = [
   {
@@ -115,45 +117,147 @@ const galleryItems = [
 
 const categories = ['All', 'Terracotta', 'Textiles', 'Jewelry', 'Pottery', 'Weaving', 'Artisans', 'Culture', 'Art', 'Mixed'];
 
+type EnquiryErrors = {
+  name?: string;
+  email?: string;
+  phone?: string;
+  message?: string;
+};
+
+const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/;
+const NAME_RE = /^[A-Za-z][A-Za-z\s.'-]{1,}$/;
+
+function validateEnquiry(data: {
+  name: string;
+  email: string;
+  countryCode: string;
+  phone: string;
+  message: string;
+}): EnquiryErrors {
+  const errors: EnquiryErrors = {};
+  const name = data.name.trim();
+  if (!name) errors.name = 'Please enter your full name';
+  else if (name.length < 2) errors.name = 'Name must be at least 2 characters';
+  else if (!NAME_RE.test(name)) errors.name = 'Name can only contain letters, spaces, . \' -';
+
+  const email = data.email.trim();
+  if (!email) errors.email = 'Please enter your email address';
+  else if (!EMAIL_RE.test(email)) errors.email = 'Please enter a valid email address';
+
+  const phone = data.phone.replace(/\D/g, '');
+  const phoneError = validatePhoneForCode(data.countryCode, phone);
+  if (phoneError) errors.phone = phoneError;
+
+  const message = data.message.trim();
+  if (message && message.length < 10) errors.message = 'Message must be at least 10 characters';
+
+  return errors;
+}
+
+const initialEnquiryData = {
+  name: '',
+  email: '',
+  countryCode: DEFAULT_COUNTRY_CODE,
+  phone: '',
+  message: '',
+};
+
 export function Gallery() {
   const [selectedCategory, setSelectedCategory] = useState('All');
   const [selectedImage, setSelectedImage] = useState<typeof galleryItems[0] | null>(null);
   const [showEnquiryForm, setShowEnquiryForm] = useState(false);
   const [enquirySubmitted, setEnquirySubmitted] = useState(false);
-  const [enquiryData, setEnquiryData] = useState({
-    name: '',
-    email: '',
-    phone: '',
-    message: '',
-  });
+  const [enquiryData, setEnquiryData] = useState(initialEnquiryData);
+  const [enquiryErrors, setEnquiryErrors] = useState<EnquiryErrors>({});
+  const [enquirySubmitError, setEnquirySubmitError] = useState<string | null>(null);
+  const [enquirySubmitting, setEnquirySubmitting] = useState(false);
 
   const filteredItems = selectedCategory === 'All'
     ? galleryItems
     : galleryItems.filter(item => item.category === selectedCategory);
 
-  const handleEnquiryChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
-    setEnquiryData({
-      ...enquiryData,
-      [e.target.name]: e.target.value,
-    });
+  const handleEnquiryChange = (
+    e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>,
+  ) => {
+    const { name, value } = e.target;
+    const nextValue = name === 'phone' ? value.replace(/\D/g, '') : value;
+    setEnquiryData((prev) => ({ ...prev, [name]: nextValue }));
+    if (enquiryErrors[name as keyof EnquiryErrors]) {
+      setEnquiryErrors((prev) => {
+        const next = { ...prev };
+        delete next[name as keyof EnquiryErrors];
+        return next;
+      });
+    }
+    if (name === 'countryCode' && enquiryErrors.phone) {
+      setEnquiryErrors((prev) => {
+        const next = { ...prev };
+        delete next.phone;
+        return next;
+      });
+    }
   };
 
-  const handleEnquirySubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    setEnquirySubmitted(true);
-    setTimeout(() => {
-      setEnquirySubmitted(false);
-      setShowEnquiryForm(false);
-      setEnquiryData({ name: '', email: '', phone: '', message: '' });
-      setSelectedImage(null);
-    }, 3000);
+  const handleEnquiryBlur = (e: React.FocusEvent<HTMLInputElement | HTMLTextAreaElement>) => {
+    const { name } = e.target;
+    const validationErrors = validateEnquiry(enquiryData);
+    setEnquiryErrors((prev) => ({
+      ...prev,
+      [name]: validationErrors[name as keyof EnquiryErrors],
+    }));
   };
+
+  const handleEnquirySubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!selectedImage) return;
+    const validationErrors = validateEnquiry(enquiryData);
+    if (Object.keys(validationErrors).length > 0) {
+      setEnquiryErrors(validationErrors);
+      return;
+    }
+    setEnquiryErrors({});
+    setEnquirySubmitError(null);
+    setEnquirySubmitting(true);
+    try {
+      await sendEnquiryEmail({
+        ...enquiryData,
+        productTitle: selectedImage.title,
+        productCategory: selectedImage.category,
+        productPrice: selectedImage.price,
+        productArtisan: selectedImage.artisan,
+      });
+      setEnquirySubmitted(true);
+      setTimeout(() => {
+        setEnquirySubmitted(false);
+        setShowEnquiryForm(false);
+        setEnquiryData(initialEnquiryData);
+        setSelectedImage(null);
+      }, 3000);
+    } catch (err) {
+      setEnquirySubmitError(
+        err instanceof Error
+          ? err.message
+          : 'Something went wrong while sending your enquiry. Please try again.',
+      );
+    } finally {
+      setEnquirySubmitting(false);
+    }
+  };
+
+  const enquiryFieldClass = (field: keyof EnquiryErrors) =>
+    `w-full px-5 py-4 border-3 rounded-xl focus:ring-4 outline-none transition-all text-lg bg-white/20 backdrop-blur-sm text-white placeholder-white/60 ${
+      enquiryErrors[field]
+        ? 'border-red-400 focus:ring-red-300 focus:border-red-400'
+        : 'border-white/30 focus:ring-orange-400 focus:border-orange-500'
+    }`;
 
   const closeModal = () => {
     setSelectedImage(null);
     setShowEnquiryForm(false);
     setEnquirySubmitted(false);
-    setEnquiryData({ name: '', email: '', phone: '', message: '' });
+    setEnquiryData(initialEnquiryData);
+    setEnquiryErrors({});
+    setEnquirySubmitError(null);
   };
 
   return (
@@ -391,7 +495,7 @@ export function Gallery() {
                     </p>
                   </div>
                 ) : (
-                  <form onSubmit={handleEnquirySubmit} className="space-y-6">
+                  <form onSubmit={handleEnquirySubmit} noValidate className="space-y-6">
                     <div>
                       <label htmlFor="name" className="block text-sm font-bold text-white mb-2 flex items-center space-x-2">
                         <User size={18} />
@@ -404,9 +508,17 @@ export function Gallery() {
                         required
                         value={enquiryData.name}
                         onChange={handleEnquiryChange}
-                        className="w-full px-5 py-4 border-3 border-white/30 rounded-xl focus:ring-4 focus:ring-orange-400 focus:border-orange-500 outline-none transition-all text-lg bg-white/20 backdrop-blur-sm text-white placeholder-white/60"
+                        onBlur={handleEnquiryBlur}
+                        aria-invalid={!!enquiryErrors.name}
+                        aria-describedby={enquiryErrors.name ? 'enquiry-name-error' : undefined}
+                        className={enquiryFieldClass('name')}
                         placeholder="Enter your full name"
                       />
+                      {enquiryErrors.name && (
+                        <p id="enquiry-name-error" className="mt-2 text-sm font-semibold text-red-300">
+                          {enquiryErrors.name}
+                        </p>
+                      )}
                     </div>
 
                     <div>
@@ -421,9 +533,17 @@ export function Gallery() {
                         required
                         value={enquiryData.email}
                         onChange={handleEnquiryChange}
-                        className="w-full px-5 py-4 border-3 border-white/30 rounded-xl focus:ring-4 focus:ring-orange-400 focus:border-orange-500 outline-none transition-all text-lg bg-white/20 backdrop-blur-sm text-white placeholder-white/60"
+                        onBlur={handleEnquiryBlur}
+                        aria-invalid={!!enquiryErrors.email}
+                        aria-describedby={enquiryErrors.email ? 'enquiry-email-error' : undefined}
+                        className={enquiryFieldClass('email')}
                         placeholder="your.email@example.com"
                       />
+                      {enquiryErrors.email && (
+                        <p id="enquiry-email-error" className="mt-2 text-sm font-semibold text-red-300">
+                          {enquiryErrors.email}
+                        </p>
+                      )}
                     </div>
 
                     <div>
@@ -431,16 +551,48 @@ export function Gallery() {
                         <Phone size={18} />
                         <span>Phone Number *</span>
                       </label>
-                      <input
-                        type="tel"
-                        id="phone"
-                        name="phone"
-                        required
-                        value={enquiryData.phone}
-                        onChange={handleEnquiryChange}
-                        className="w-full px-5 py-4 border-3 border-white/30 rounded-xl focus:ring-4 focus:ring-orange-400 focus:border-orange-500 outline-none transition-all text-lg bg-white/20 backdrop-blur-sm text-white placeholder-white/60"
-                        placeholder="+91 98765 43210"
-                      />
+                      <div
+                        className={`flex items-stretch rounded-xl border-3 bg-white/20 backdrop-blur-sm overflow-hidden transition-all focus-within:ring-4 ${
+                          enquiryErrors.phone
+                            ? 'border-red-400 focus-within:ring-red-300 focus-within:border-red-400'
+                            : 'border-white/30 focus-within:ring-orange-400 focus-within:border-orange-500'
+                        }`}
+                      >
+                        <select
+                          id="countryCode"
+                          name="countryCode"
+                          aria-label="Country code"
+                          value={enquiryData.countryCode}
+                          onChange={handleEnquiryChange}
+                          className="px-3 py-4 bg-transparent border-r-2 border-white/30 outline-none text-lg text-white cursor-pointer"
+                        >
+                          {COUNTRY_CODES.map((c) => (
+                            <option key={c.iso} value={c.code} className="text-gray-800">
+                              {c.flag} {c.code}
+                            </option>
+                          ))}
+                        </select>
+                        <input
+                          type="tel"
+                          id="phone"
+                          name="phone"
+                          inputMode="numeric"
+                          required
+                          maxLength={phoneMaxLengthForCode(enquiryData.countryCode)}
+                          value={enquiryData.phone}
+                          onChange={handleEnquiryChange}
+                          onBlur={handleEnquiryBlur}
+                          aria-invalid={!!enquiryErrors.phone}
+                          aria-describedby={enquiryErrors.phone ? 'enquiry-phone-error' : undefined}
+                          className="flex-1 px-5 py-4 bg-transparent outline-none text-lg text-white placeholder-white/60"
+                          placeholder="00000 00000"
+                        />
+                      </div>
+                      {enquiryErrors.phone && (
+                        <p id="enquiry-phone-error" className="mt-2 text-sm font-semibold text-red-300">
+                          {enquiryErrors.phone}
+                        </p>
+                      )}
                     </div>
 
                     <div>
@@ -453,25 +605,45 @@ export function Gallery() {
                         name="message"
                         value={enquiryData.message}
                         onChange={handleEnquiryChange}
+                        onBlur={handleEnquiryBlur}
+                        aria-invalid={!!enquiryErrors.message}
+                        aria-describedby={enquiryErrors.message ? 'enquiry-message-error' : undefined}
                         rows={4}
-                        className="w-full px-5 py-4 border-3 border-white/30 rounded-xl focus:ring-4 focus:ring-orange-400 focus:border-orange-500 outline-none transition-all resize-none text-lg bg-white/20 backdrop-blur-sm text-white placeholder-white/60"
+                        className={`w-full px-5 py-4 border-3 rounded-xl focus:ring-4 outline-none transition-all resize-none text-lg bg-white/20 backdrop-blur-sm text-white placeholder-white/60 ${
+                          enquiryErrors.message
+                            ? 'border-red-400 focus:ring-red-300 focus:border-red-400'
+                            : 'border-white/30 focus:ring-orange-400 focus:border-orange-500'
+                        }`}
                         placeholder="Any specific requirements or questions about this product..."
                       />
+                      {enquiryErrors.message && (
+                        <p id="enquiry-message-error" className="mt-2 text-sm font-semibold text-red-300">
+                          {enquiryErrors.message}
+                        </p>
+                      )}
                     </div>
+
+                    {enquirySubmitError && (
+                      <div className="p-4 bg-red-500/20 backdrop-blur-sm border-2 border-red-400 rounded-xl text-red-100 font-semibold">
+                        {enquirySubmitError}
+                      </div>
+                    )}
 
                     <div className="flex space-x-4">
                       <button
                         type="button"
                         onClick={() => setShowEnquiryForm(false)}
-                        className="flex-1 bg-white/20 backdrop-blur-sm text-white py-4 rounded-xl text-lg font-bold hover:bg-white/30 transition-all shadow-lg border-2 border-white/30"
+                        disabled={enquirySubmitting}
+                        className="flex-1 bg-white/20 backdrop-blur-sm text-white py-4 rounded-xl text-lg font-bold hover:bg-white/30 transition-all shadow-lg border-2 border-white/30 disabled:opacity-60 disabled:cursor-not-allowed"
                       >
                         Back
                       </button>
                       <button
                         type="submit"
-                        className="flex-1 bg-gradient-to-r from-orange-600 via-red-600 to-pink-600 text-white py-4 rounded-xl text-lg font-bold hover:shadow-2xl transition-all shadow-lg flex items-center justify-center space-x-3 border-4 border-yellow-300 hover:scale-105"
+                        disabled={enquirySubmitting}
+                        className="flex-1 bg-gradient-to-r from-orange-600 via-red-600 to-pink-600 text-white py-4 rounded-xl text-lg font-bold hover:shadow-2xl transition-all shadow-lg flex items-center justify-center space-x-3 border-4 border-yellow-300 hover:scale-105 disabled:opacity-70 disabled:cursor-not-allowed disabled:hover:scale-100"
                       >
-                        <span>Submit Enquiry</span>
+                        <span>{enquirySubmitting ? 'Sending…' : 'Submit Enquiry'}</span>
                         <Send size={20} />
                       </button>
                     </div>

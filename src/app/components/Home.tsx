@@ -155,12 +155,8 @@ export function Home() {
             <h2 className="text-5xl font-bold mb-6 text-gray-800">
               Our Mission
             </h2>
-            <div className="flex justify-center items-center space-x-2 mb-4">
-              <div className="w-16 h-1 bg-gradient-to-r from-transparent to-orange-600"></div>
-              <div className="w-3 h-3 bg-orange-600 rotate-45"></div>
-              <div className="w-24 h-1 bg-orange-600"></div>
-              <div className="w-3 h-3 bg-orange-600 rotate-45"></div>
-              <div className="w-16 h-1 bg-gradient-to-l from-transparent to-orange-600"></div>
+            <div className="flex justify-center items-center mb-4">
+              <div className="w-24 h-1 bg-gradient-to-r from-transparent via-orange-600 to-transparent rounded-full"></div>
             </div>
             <p className="text-xl text-gray-600 max-w-3xl mx-auto">
               Empowering women artisans and preserving our cultural heritage
