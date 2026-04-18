@@ -27,25 +27,28 @@
 
 declare(strict_types=1);
 
-// SMTP server settings  on cPanel shared hosting these are usually:
-//   Host:   localhost  (or mail.<your-domain>)
-//   Port:   465  (SSL) or 587  (STARTTLS)
-//   Secure: 'ssl'  for port 465,  'tls'  for port 587
-define('MAIL_SMTP_HOST',   'localhost');
+// SMTP server settings
+// These match what cPanel  Email Accounts  Connect Devices shows for
+// info@ekushernaree.com:
+//   Outgoing Server: mail.ekushernaree.com
+//   SMTP Port:       465
+//   Encryption:      SSL  (port 465 == SSL, port 587 would be TLS/STARTTLS)
+define('MAIL_SMTP_HOST',   'mail.ekushernaree.com');
 define('MAIL_SMTP_PORT',   465);
-define('MAIL_SMTP_SECURE', 'ssl');           // 'ssl' or 'tls'
+define('MAIL_SMTP_SECURE', 'ssl');           // 'ssl' for 465,  'tls' for 587
 
-// Credentials of the sending mailbox (from cPanel  Email Accounts)
-define('MAIL_SMTP_USER',   'noreply@ekushernaree.com');
+// Credentials of the sending mailbox.
+// Username is the full email address. Password is the mailbox password
+// (same one used for webmail / IMAP).
+define('MAIL_SMTP_USER',   'info@ekushernaree.com');
 define('MAIL_SMTP_PASS',   'PASTE_THE_MAILBOX_PASSWORD_HERE');
 
 // What appears in the From: header of the outgoing email.
 // Use the SAME mailbox as MAIL_SMTP_USER  many SMTP servers reject otherwise.
-define('MAIL_FROM_ADDRESS', 'noreply@ekushernaree.com');
+define('MAIL_FROM_ADDRESS', 'info@ekushernaree.com');
 define('MAIL_FROM_NAME',    'Ekusher Naree Website');
 
-// Where form submissions should land.
-// Multiple recipients allowed  e.g. ['info@...', 'contact@...']
+// Where form submissions should land. Multiple recipients allowed.
 define('MAIL_RECIPIENTS', [
     'info@ekushernaree.com',
     // 'contact@ekushernaree.com',
