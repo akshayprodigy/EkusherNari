@@ -4,10 +4,14 @@ node_modules/
 # build output
 dist/
 
-# local env files
+# local env / secret files
 .env
 .env.*
 !.env.example
+
+# Never commit the real mail config (the .example is fine)
+php/api/mail-config.php
+private/
 
 # logs
 npm-debug.log*

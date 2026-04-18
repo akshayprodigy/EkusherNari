@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { X, Sparkles, Send, Mail, Phone, User, MessageCircle } from 'lucide-react';
 import { ImageWithFallback } from './figma/ImageWithFallback';
 import { COUNTRY_CODES, DEFAULT_COUNTRY_CODE, phoneMaxLengthForCode, validatePhoneForCode } from '../lib/countryCodes';
-import { sendEnquiryEmail } from '../lib/emailService';
+import { FormSubmitError, submitEnquiry } from '../lib/formApi';
 
 const galleryItems = [
   {
@@ -219,7 +219,7 @@ export function Gallery() {
     setEnquirySubmitError(null);
     setEnquirySubmitting(true);
     try {
-      await sendEnquiryEmail({
+      await submitEnquiry({
         ...enquiryData,
         productTitle: selectedImage.title,
         productCategory: selectedImage.category,
@@ -234,11 +234,16 @@ export function Gallery() {
         setSelectedImage(null);
       }, 3000);
     } catch (err) {
-      setEnquirySubmitError(
-        err instanceof Error
-          ? err.message
-          : 'Something went wrong while sending your enquiry. Please try again.',
-      );
+      if (err instanceof FormSubmitError && err.fieldErrors) {
+        setEnquiryErrors(err.fieldErrors as EnquiryErrors);
+        setEnquirySubmitError(err.message);
+      } else {
+        setEnquirySubmitError(
+          err instanceof Error
+            ? err.message
+            : 'Something went wrong while sending your enquiry. Please try again.',
+        );
+      }
     } finally {
       setEnquirySubmitting(false);
     }

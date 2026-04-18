@@ -1,7 +1,7 @@
 import { Mail, Phone, MapPin, Send, Sparkles } from 'lucide-react';
 import { useState } from 'react';
 import { COUNTRY_CODES, DEFAULT_COUNTRY_CODE, phoneMaxLengthForCode, validatePhoneForCode } from '../lib/countryCodes';
-import { sendContactEmail } from '../lib/emailService';
+import { FormSubmitError, submitContact } from '../lib/formApi';
 
 function WhatsAppIcon() {
   return (
@@ -95,18 +95,23 @@ export function Contact() {
     setSubmitError(null);
     setSubmitting(true);
     try {
-      await sendContactEmail(formData);
+      await submitContact(formData);
       setSubmitted(true);
       setTimeout(() => {
         setSubmitted(false);
         setFormData(initialFormData);
       }, 3000);
     } catch (err) {
-      setSubmitError(
-        err instanceof Error
-          ? err.message
-          : 'Something went wrong while sending your message. Please try again.',
-      );
+      if (err instanceof FormSubmitError && err.fieldErrors) {
+        setErrors(err.fieldErrors as ContactErrors);
+        setSubmitError(err.message);
+      } else {
+        setSubmitError(
+          err instanceof Error
+            ? err.message
+            : 'Something went wrong while sending your message. Please try again.',
+        );
+      }
     } finally {
       setSubmitting(false);
     }

@@ -1,0 +1,17 @@
+# Block direct access to support files inside /api/ — only the public
+# endpoints (contact.php, enquiry.php) should be reachable.
+
+<FilesMatch "^_">
+    Require all denied
+</FilesMatch>
+
+<FilesMatch "\.(example\.php|md|txt|log)$">
+    Require all denied
+</FilesMatch>
+
+# Block direct browsing of the lib/ folder
+<IfModule mod_autoindex.c>
+    Options -Indexes
+</IfModule>
+
+RedirectMatch 403 ^/api/lib/.*$
