@@ -18,6 +18,17 @@
 </FilesMatch>
 
 # ------------------------------------------------------------------------------
+# Force HTTPS — 301-redirect any plain-HTTP request to the HTTPS equivalent.
+# Uses %{HTTPS} which Apache sets to "on" when the request came in via TLS.
+# Kept as a separate rewrite block so it fires before SPA fallback.
+# ------------------------------------------------------------------------------
+<IfModule mod_rewrite.c>
+    RewriteEngine On
+    RewriteCond %{HTTPS} !=on
+    RewriteRule ^ https://%{HTTP_HOST}%{REQUEST_URI} [R=301,L]
+</IfModule>
+
+# ------------------------------------------------------------------------------
 # SPA fallback — React Router owns client-side routing. Any request that does
 # NOT match a real file or directory falls back to index.html.
 # PHP files under /api/ ARE real files, so the condition below skips them.
